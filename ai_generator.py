@@ -10,8 +10,8 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def generate_quiz(text):
-    prompt = f"""You are an expert quiz creator. Based on the following study material, generate exactly 15 high quality multiple choice questions.
+def generate_quiz(text, num_questions=15):
+    prompt = f"""You are an expert quiz creator. Based on the following study material, generate exactly {num_questions} high quality multiple choice questions.
 
 Rules:
 - Questions must be directly based on the study material
@@ -46,8 +46,8 @@ Study Material:
     return questions
 
 
-def generate_flashcards(text):
-    prompt = f"""You are an expert educator. Based on the following study material, generate exactly 15 flashcards.
+def generate_flashcards(text, num_cards=15):
+    prompt = f"""You are an expert educator. Based on the following study material, generate exactly {num_cards} flashcards.
 
 Rules:
 - Each flashcard must have a clear concept or term on the front

@@ -30,6 +30,52 @@
             transition: all 0.2s;
         }
 
+        .num-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .num-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 2px solid #e0ddff;
+            background: #fafafe;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .num-btn:hover {
+            border-color: #7f77dd;
+            color: #7f77dd;
+            background: #f0eeff;
+        }
+
+        .num-btn.selected {
+            background: #7f77dd;
+            border-color: #7f77dd;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .num-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
         .generating-steps {
             display: flex;
             flex-direction: column;
@@ -139,27 +185,17 @@
                     {% if mode == 'quiz' %}📝{% else %}🃏{% endif %}
                 </div>
                 <h1>
-                    {% if mode == 'quiz' %}
-                        Generate a Quiz
-                    {% else %}
-                        Generate Flashcards
-                    {% endif %}
+                    {% if mode == 'quiz' %}Generate a Quiz{% else %}Generate Flashcards{% endif %}
                 </h1>
                 <p class="upload-sub">
-                    Upload your study material and AI will
-                    {% if mode == 'quiz' %}
-                        create 15 smart MCQ questions
-                    {% else %}
-                        generate 15 beautiful flashcards
-                    {% endif %}
+                    Upload your study material and AI will create
+                    {% if mode == 'quiz' %}smart MCQ questions{% else %}beautiful flashcards{% endif %}
                     from it
                 </p>
             </div>
 
             {% if error %}
-            <div class="error-msg">
-                ⚠️ {{ error }}
-            </div>
+            <div class="error-msg">⚠️ {{ error }}</div>
             {% endif %}
 
             <form method="POST"
@@ -169,6 +205,7 @@
                   onsubmit="showLoading()">
 
                 <input type="hidden" name="mode" value="{{ mode }}">
+                <input type="hidden" name="num" id="num-input" value="15">
 
                 <div class="upload-zone anim anim-2"
                      id="upload-zone"
@@ -202,14 +239,24 @@
                 </div>
 
                 <div class="anim anim-3">
-                    <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;">
-                        {% if mode == 'quiz' %}
-                            ✦ Generate Quiz
-                        {% else %}
-                            ✦ Generate Flashcards
-                        {% endif %}
-                    </button>
+                    <div class="num-label">
+                        How many
+                        {% if mode == 'quiz' %}questions{% else %}flashcards{% endif %}
+                        do you want?
+                    </div>
+                    <div class="num-selector">
+                        <button type="button" class="num-btn" onclick="selectNum(this, 5)">5</button>
+                        <button type="button" class="num-btn" onclick="selectNum(this, 10)">10</button>
+                        <button type="button" class="num-btn selected" onclick="selectNum(this, 15)">15</button>
+                        <button type="button" class="num-btn" onclick="selectNum(this, 20)">20</button>
+                        <button type="button" class="num-btn" onclick="selectNum(this, 25)">25</button>
+                    </div>
+                </div>
 
+                <div class="anim anim-3">
+                    <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;">
+                        {% if mode == 'quiz' %}✦ Generate Quiz{% else %}✦ Generate Flashcards{% endif %}
+                    </button>
                     <a href="{{ url_for('choose') }}"
                        class="btn btn-outline btn-full"
                        style="margin-top:10px; display:block; text-align:center;">
@@ -218,11 +265,16 @@
                 </div>
 
             </form>
-
         </div>
     </div>
 
     <script>
+        function selectNum(btn, val) {
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('num-input').value = val;
+        }
+
         function showFileName(input) {
             if (input.files && input.files[0]) {
                 document.getElementById('file-name').textContent = input.files[0].name;

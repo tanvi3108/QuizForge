@@ -115,6 +115,7 @@ def upload(mode):
 def process():
     mode = request.form.get("mode")
     file = request.files.get("file")
+    num = int(request.form.get("num", 15))
 
     if not file or file.filename == "":
         return render_template("upload.html", mode=mode, error="Please select a file.")
@@ -135,13 +136,13 @@ def process():
     user_id = session["user_id"]
 
     if mode == "quiz":
-        questions = generate_quiz(text)
+        questions = generate_quiz(text, num_questions=num)
         quiz_id = save_quiz(user_id, title, questions)
         os.remove(file_path)
         return redirect(url_for("quiz", quiz_id=quiz_id))
 
     elif mode == "flash":
-        cards = generate_flashcards(text)
+        cards = generate_flashcards(text, num_cards=num)
         fc_id = save_flashcards(user_id, title, cards)
         os.remove(file_path)
         return redirect(url_for("flashcard", fc_id=fc_id))
