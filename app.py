@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from database import (
     init_db, create_user, get_user_by_email, get_user_by_id,
     save_quiz, save_flashcards, get_user_quizzes, get_user_flashcards,
-    get_quiz_by_id, get_flashcard_by_id, update_quiz_score
+    get_quiz_by_id, get_flashcard_by_id, update_quiz_score,
+    delete_quiz, delete_flashcard
 )
 from extractor import extract_text
 from ai_generator import generate_quiz, generate_flashcards
@@ -37,13 +38,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# -------- LANDING PAGE --------
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
-# -------- AUTH ROUTES --------
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -92,8 +89,6 @@ def logout():
     session.clear()
     return redirect(url_for("index"))
 
-# -------- DASHBOARD --------
-
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -105,14 +100,10 @@ def dashboard():
                            quizzes=quizzes,
                            flashcards=flashcards)
 
-# -------- CHOOSE MODE --------
-
 @app.route("/choose")
 @login_required
 def choose():
     return render_template("choose.html")
-
-# -------- UPLOAD --------
 
 @app.route("/upload/<mode>")
 @login_required
@@ -138,7 +129,7 @@ def process():
     text = extract_text(file_path)
 
     if not text or len(text.strip()) < 100:
-        return render_template("upload.html", mode=mode, error="Could not extract enough text from the file. Please try another file.")
+        return render_template("upload.html", mode=mode, error="Could not extract enough text. Please try another file.")
 
     title = os.path.splitext(filename)[0]
     user_id = session["user_id"]
@@ -156,8 +147,6 @@ def process():
         return redirect(url_for("flashcard", fc_id=fc_id))
 
     return redirect(url_for("dashboard"))
-
-# -------- QUIZ --------
 
 @app.route("/quiz/<int:quiz_id>")
 @login_required
@@ -180,8 +169,6 @@ def save_score():
     update_quiz_score(quiz_id, score)
     return jsonify({"status": "ok"})
 
-# -------- FLASHCARD --------
-
 @app.route("/flashcard/<int:fc_id>")
 @login_required
 def flashcard(fc_id):
@@ -193,8 +180,6 @@ def flashcard(fc_id):
                            fc_id=fc_id,
                            title=fc_data["title"],
                            cards=cards)
-
-# -------- HISTORY --------
 
 @app.route("/history")
 @login_required
@@ -225,6 +210,18 @@ def history():
     return render_template("history.html",
                            quizzes=quizzes_parsed,
                            flashcards=flashcards_parsed)
+
+@app.route("/delete_quiz/<int:quiz_id>")
+@login_required
+def delete_quiz_route(quiz_id):
+    delete_quiz(quiz_id)
+    return redirect(url_for("history"))
+
+@app.route("/delete_flashcard/<int:fc_id>")
+@login_required
+def delete_flashcard_route(fc_id):
+    delete_flashcard(fc_id)
+    return redirect(url_for("history"))
 
 if __name__ == "__main__":
     app.run(debug=True)

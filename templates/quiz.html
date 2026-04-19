@@ -24,14 +24,8 @@
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .feedback-box {
@@ -57,13 +51,8 @@
             display: block;
         }
 
-        .score-page {
-            display: none;
-        }
-
-        .score-page.show {
-            display: flex;
-        }
+        .score-page { display: none; }
+        .score-page.show { display: flex; flex-direction: column; align-items: center; padding: 2rem; }
 
         .result-breakdown {
             display: flex;
@@ -93,20 +82,44 @@
             margin-top: 2px;
         }
 
-        .result-stat.green .r-number {
-            color: #1d9e75;
+        .result-stat.green .r-number { color: #1d9e75; }
+        .result-stat.green { background: #e1f5ee; }
+        .result-stat.red .r-number { color: #e24b4a; }
+        .result-stat.red { background: #fff0f0; }
+
+        .review-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 16px;
+            text-align: left;
         }
 
-        .result-stat.green {
+        .review-item.correct {
             background: #e1f5ee;
+            border: 1.5px solid #1d9e75;
         }
 
-        .result-stat.red .r-number {
-            color: #e24b4a;
-        }
-
-        .result-stat.red {
+        .review-item.wrong {
             background: #fff0f0;
+            border: 1.5px solid #e24b4a;
+        }
+
+        .review-q {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c2c2c;
+            margin-bottom: 8px;
+        }
+
+        .review-your {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .review-correct {
+            font-size: 12px;
+            color: #0f6e56;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -120,7 +133,6 @@
         </div>
     </nav>
 
-    <!-- QUIZ SECTION -->
     <div class="quiz-page" id="quiz-section">
         <div class="quiz-container">
 
@@ -153,10 +165,9 @@
         </div>
     </div>
 
-    <!-- SCORE SECTION -->
     <div class="score-page" id="score-section">
-        <div class="score-card">
 
+        <div class="score-card">
             <div class="score-emoji" id="score-emoji">🎉</div>
             <h2 id="score-title">Quiz Complete!</h2>
             <p id="score-message"></p>
@@ -182,18 +193,19 @@
             </div>
 
             <div class="score-actions">
-                <button class="btn btn-primary" onclick="restartQuiz()">
-                    🔄 Try Again
-                </button>
-                <a href="{{ url_for('choose') }}" class="btn btn-secondary">
-                    ✦ Create New
-                </a>
-                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">
-                    🏠 Dashboard
-                </a>
+                <button class="btn btn-primary" onclick="restartQuiz()">🔄 Try Again</button>
+                <a href="{{ url_for('choose') }}" class="btn btn-secondary">✦ Create New</a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">🏠 Dashboard</a>
             </div>
-
         </div>
+
+        <div class="score-card" style="margin-top:1.5rem; width:100%; max-width:620px;">
+            <h3 style="font-size:18px; font-weight:700; margin-bottom:1.5rem; color:#2c2c2c;">
+                📋 Answer Review
+            </h3>
+            <div id="answer-review"></div>
+        </div>
+
     </div>
 
     <script>
@@ -202,6 +214,7 @@
         let current = 0;
         let score = 0;
         let answered = false;
+        let userAnswers = [];
 
         function loadQuestion() {
             if (current >= questions.length) {
@@ -246,6 +259,7 @@
         function selectAnswer(btn, selected, correct) {
             if (answered) return;
             answered = true;
+            userAnswers[current] = selected;
 
             const allBtns = document.querySelectorAll('.option-btn');
             allBtns.forEach(b => b.disabled = true);
@@ -261,11 +275,8 @@
                 btn.classList.add('wrong');
                 feedback.textContent = '❌ Wrong! The correct answer was: ' + correct;
                 feedback.className = 'feedback-box wrong';
-
                 allBtns.forEach(b => {
-                    if (b.textContent === correct) {
-                        b.classList.add('correct');
-                    }
+                    if (b.textContent === correct) b.classList.add('correct');
                 });
             }
 
@@ -292,26 +303,20 @@
             document.getElementById('pct-display').textContent = pct + '%';
 
             let emoji, title, message;
-
             if (pct === 100) {
-                emoji = '🏆';
-                title = 'Perfect Score!';
+                emoji = '🏆'; title = 'Perfect Score!';
                 message = 'Outstanding! You got every single question right!';
             } else if (pct >= 80) {
-                emoji = '🎉';
-                title = 'Excellent Work!';
+                emoji = '🎉'; title = 'Excellent Work!';
                 message = 'You really know this material well. Keep it up!';
             } else if (pct >= 60) {
-                emoji = '👍';
-                title = 'Good Job!';
+                emoji = '👍'; title = 'Good Job!';
                 message = 'Solid effort! Review the ones you missed and try again.';
             } else if (pct >= 40) {
-                emoji = '📚';
-                title = 'Keep Studying!';
+                emoji = '📚'; title = 'Keep Studying!';
                 message = 'You\'re getting there! A little more revision will help.';
             } else {
-                emoji = '💪';
-                title = 'Don\'t Give Up!';
+                emoji = '💪'; title = 'Don\'t Give Up!';
                 message = 'Everyone starts somewhere. Review the material and try again!';
             }
 
@@ -322,16 +327,31 @@
             fetch('/save_score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    quiz_id: quizId,
-                    score: score + '/' + total
-                })
+                body: JSON.stringify({ quiz_id: quizId, score: score + '/' + total })
+            });
+
+            const review = document.getElementById('answer-review');
+            review.innerHTML = '';
+            questions.forEach((q, i) => {
+                const userAnswer = userAnswers[i];
+                const isCorrect = userAnswer === q.answer;
+                const div = document.createElement('div');
+                div.className = 'review-item ' + (isCorrect ? 'correct' : 'wrong');
+                div.innerHTML = `
+                    <div class="review-q">Q${i+1}. ${q.question}</div>
+                    <div class="review-your" style="color:${isCorrect ? '#0f6e56' : '#a32d2d'}">
+                        ${isCorrect ? '✅ Your answer: ' + userAnswer : '❌ Your answer: ' + (userAnswer || 'Not answered')}
+                    </div>
+                    <div class="review-correct">✓ Correct answer: ${q.answer}</div>
+                `;
+                review.appendChild(div);
             });
         }
 
         function restartQuiz() {
             current = 0;
             score = 0;
+            userAnswers = [];
             document.getElementById('score-section').classList.remove('show');
             document.getElementById('quiz-section').style.display = 'flex';
             loadQuestion();

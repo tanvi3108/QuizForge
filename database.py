@@ -151,3 +151,17 @@ def get_flashcard_by_id(fc_id):
     card = cursor.fetchone()
     conn.close()
     return card
+
+def delete_quiz(quiz_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM saved_quizzes WHERE id = ?", (quiz_id,))
+    conn.commit()
+    conn.close()
+
+def delete_flashcard(fc_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM saved_flashcards WHERE id = ?", (fc_id,))
+    conn.commit()
+    conn.close()
