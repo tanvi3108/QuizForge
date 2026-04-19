@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Mode — QuizForge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .anim {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-1 { animation-delay: 0.1s; }
+        .anim-2 { animation-delay: 0.3s; }
+        .anim-3 { animation-delay: 0.5s; }
+
+        .choose-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choose-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .choose-card.quiz-card::before {
+            background: linear-gradient(135deg, #f0eeff, #e0ddff);
+        }
+
+        .choose-card.flash-card::before {
+            background: linear-gradient(135deg, #e1f5ee, #9fe1cb);
+        }
+
+        .choose-card:hover::before {
+            opacity: 1;
+        }
+
+        .choose-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .choose-card .arrow {
+            display: inline-block;
+            font-size: 22px;
+            margin-top: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .choose-card:hover .arrow {
+            transform: translateX(6px);
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .feature-list li {
+            font-size: 13px;
+            color: #888;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            color: #7f77dd;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .flash-card .feature-list li::before {
+            color: #1d9e75;
+        }
+    </style>
+</head>
+<body style="background: #f0eeff;">
+
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="logo">Quiz<span>Forge</span></a>
+        <div class="nav-links">
+            <a href="{{ url_for('history') }}">📋 History</a>
+            <a href="{{ url_for('logout') }}" style="color:#e24b4a;">Logout</a>
+        </div>
+    </nav>
+
+    <div class="choose-page">
+        <div class="choose-content">
+
+            <div class="anim anim-1">
+                <h1>What would you like to create?</h1>
+                <p>Upload your study material and let AI do the rest</p>
+            </div>
+
+            <div class="choose-grid anim anim-2">
+
+                <a href="{{ url_for('upload', mode='quiz') }}" class="choose-card quiz-card">
+                    <div class="choose-icon">📝</div>
+                    <h2>Quiz</h2>
+                    <p>Test your knowledge with AI-generated multiple choice questions</p>
+                    <ul class="feature-list">
+                        <li>15 smart MCQ questions</li>
+                        <li>One question at a time</li>
+                        <li>Instant score & feedback</li>
+                        <li>Saved to your account</li>
+                    </ul>
+                    <div class="arrow">→</div>
+                </a>
+
+                <a href="{{ url_for('upload', mode='flash') }}" class="choose-card flash-card">
+                    <div class="choose-icon">🃏</div>
+                    <h2>Flashcards</h2>
+                    <p>Learn key concepts with beautiful flip cards for quick revision</p>
+                    <ul class="feature-list">
+                        <li>15 key concept cards</li>
+                        <li>Flip animation</li>
+                        <li>Navigate at your pace</li>
+                        <li>Saved to your account</li>
+                    </ul>
+                    <div class="arrow">→</div>
+                </a>
+
+            </div>
+
+            <div class="anim anim-3">
+                <p style="font-size:13px; color:#bbb; margin-top:1.5rem;">
+                    Supports PDF, Images, Word Docs and PowerPoint files
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

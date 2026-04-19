@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — QuizForge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .anim {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-1 { animation-delay: 0.1s; }
+        .anim-2 { animation-delay: 0.25s; }
+        .anim-3 { animation-delay: 0.4s; }
+        .anim-4 { animation-delay: 0.55s; }
+        .anim-5 { animation-delay: 0.7s; }
+
+        .welcome-banner {
+            background: linear-gradient(135deg, #7f77dd, #1d9e75);
+            border-radius: 24px;
+            padding: 2rem 2.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .welcome-banner h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .welcome-banner p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .welcome-banner .banner-btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-white {
+            background: white;
+            color: #7f77dd;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-white:hover {
+            background: #f0eeff;
+            transform: translateY(-2px);
+        }
+
+        .btn-white-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.6);
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-white-outline:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 16px rgba(127,119,221,0.07);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 32px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #7f77dd;
+            line-height: 1;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .section-header .section-title {
+            margin-bottom: 0;
+        }
+
+        .see-all {
+            font-size: 13px;
+            color: #7f77dd;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .see-all:hover {
+            color: #534ab7;
+        }
+
+        .item-card {
+            text-decoration: none;
+            display: block;
+        }
+
+        .item-card .item-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 50px;
+            margin-top: 8px;
+        }
+
+        .badge-quiz {
+            background: #f0eeff;
+            color: #7f77dd;
+        }
+
+        .badge-flash {
+            background: #e1f5ee;
+            color: #0f6e56;
+        }
+
+        .no-items {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            color: #ccc;
+            grid-column: 1 / -1;
+        }
+
+        .no-items .no-icon {
+            font-size: 44px;
+            margin-bottom: 0.75rem;
+        }
+
+        .no-items p {
+            font-size: 14px;
+            color: #bbb;
+        }
+    </style>
+</head>
+<body style="background: #f0eeff;">
+
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="logo">Quiz<span>Forge</span></a>
+        <div class="nav-links">
+            <a href="{{ url_for('history') }}">📋 History</a>
+            <a href="{{ url_for('choose') }}" class="btn-nav">+ New</a>
+            <a href="{{ url_for('logout') }}" style="color:#e24b4a;">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="anim anim-1">
+            <div class="welcome-banner">
+                <div>
+                    <h1>Hey, {{ user_name }}! 👋</h1>
+                    <p>Ready to forge some knowledge today?</p>
+                </div>
+                <div class="banner-btns">
+                    <a href="{{ url_for('choose') }}" class="btn-white">+ Create New</a>
+                    <a href="{{ url_for('history') }}" class="btn-white-outline">View History</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="anim anim-2">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-number">{{ quizzes|length }}</div>
+                    <div class="stat-label">Quizzes Created</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🃏</div>
+                    <div class="stat-number">{{ flashcards|length }}</div>
+                    <div class="stat-label">Flashcard Sets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-number">{{ (quizzes|length) + (flashcards|length) }}</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="anim anim-3">
+            <div class="section-header">
+                <div class="section-title">📝 Recent Quizzes</div>
+                <a href="{{ url_for('history') }}" class="see-all">See all →</a>
+            </div>
+            <div class="items-grid">
+                {% if quizzes %}
+                    {% for q in quizzes[:4] %}
+                    <a href="{{ url_for('quiz', quiz_id=q['id']) }}" class="item-card">
+                        <div class="item-icon">📝</div>
+                        <div class="item-title">{{ q['title'] }}</div>
+                        <div class="item-meta">{{ q['created_at'][:10] }}</div>
+                        {% if q['score'] %}
+                        <div class="item-score">Score: {{ q['score'] }}</div>
+                        {% endif %}
+                        <span class="item-badge badge-quiz">Quiz</span>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                <div class="no-items">
+                    <div class="no-icon">📭</div>
+                    <p>No quizzes yet — create your first one!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="anim anim-4">
+            <div class="section-header">
+                <div class="section-title">🃏 Recent Flashcards</div>
+                <a href="{{ url_for('history') }}" class="see-all">See all →</a>
+            </div>
+            <div class="items-grid">
+                {% if flashcards %}
+                    {% for f in flashcards[:4] %}
+                    <a href="{{ url_for('flashcard', fc_id=f['id']) }}" class="item-card">
+                        <div class="item-icon">🃏</div>
+                        <div class="item-title">{{ f['title'] }}</div>
+                        <div class="item-meta">{{ f['created_at'][:10] }}</div>
+                        <span class="item-badge badge-flash">Flashcards</span>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                <div class="no-items">
+                    <div class="no-icon">📭</div>
+                    <p>No flashcards yet — create your first set!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

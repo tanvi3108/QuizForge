@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz — QuizForge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .anim {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-1 { animation-delay: 0.1s; }
+        .anim-2 { animation-delay: 0.25s; }
+
+        .question-anim {
+            animation: slideIn 0.4s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feedback-box {
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            background: #e1f5ee;
+            color: #0f6e56;
+            border: 1.5px solid #1d9e75;
+            display: block;
+        }
+
+        .feedback-box.wrong {
+            background: #fff0f0;
+            color: #a32d2d;
+            border: 1.5px solid #e24b4a;
+            display: block;
+        }
+
+        .score-page {
+            display: none;
+        }
+
+        .score-page.show {
+            display: flex;
+        }
+
+        .result-breakdown {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .result-stat {
+            background: #f0eeff;
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .result-stat .r-number {
+            font-size: 26px;
+            font-weight: 700;
+            color: #7f77dd;
+        }
+
+        .result-stat .r-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .result-stat.green .r-number {
+            color: #1d9e75;
+        }
+
+        .result-stat.green {
+            background: #e1f5ee;
+        }
+
+        .result-stat.red .r-number {
+            color: #e24b4a;
+        }
+
+        .result-stat.red {
+            background: #fff0f0;
+        }
+    </style>
+</head>
+<body style="background: #f0eeff;">
+
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="logo">Quiz<span>Forge</span></a>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+            <a href="{{ url_for('logout') }}" style="color:#e24b4a;">Logout</a>
+        </div>
+    </nav>
+
+    <!-- QUIZ SECTION -->
+    <div class="quiz-page" id="quiz-section">
+        <div class="quiz-container">
+
+            <div class="quiz-header anim anim-1">
+                <h1>📝 {{ title }}</h1>
+            </div>
+
+            <div class="anim anim-2">
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="question-counter" id="q-counter">Question 1 of {{ questions|length }}</div>
+            </div>
+
+            <div class="quiz-card" id="quiz-card">
+                <div class="question-text" id="question-text"></div>
+                <div class="options-list" id="options-list"></div>
+                <div class="feedback-box" id="feedback-box"></div>
+                <div class="quiz-footer">
+                    <span style="font-size:13px; color:#ccc;" id="answer-hint">Choose an answer</span>
+                    <button class="btn btn-primary"
+                            id="next-btn"
+                            onclick="nextQuestion()"
+                            style="display:none; padding:11px 28px; font-size:14px;">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCORE SECTION -->
+    <div class="score-page" id="score-section">
+        <div class="score-card">
+
+            <div class="score-emoji" id="score-emoji">🎉</div>
+            <h2 id="score-title">Quiz Complete!</h2>
+            <p id="score-message"></p>
+
+            <div class="score-circle">
+                <div class="score-number" id="score-display">0/0</div>
+                <div class="score-label">your score</div>
+            </div>
+
+            <div class="result-breakdown">
+                <div class="result-stat green">
+                    <div class="r-number" id="correct-count">0</div>
+                    <div class="r-label">Correct</div>
+                </div>
+                <div class="result-stat red">
+                    <div class="r-number" id="wrong-count">0</div>
+                    <div class="r-label">Wrong</div>
+                </div>
+                <div class="result-stat">
+                    <div class="r-number" id="pct-display">0%</div>
+                    <div class="r-label">Accuracy</div>
+                </div>
+            </div>
+
+            <div class="score-actions">
+                <button class="btn btn-primary" onclick="restartQuiz()">
+                    🔄 Try Again
+                </button>
+                <a href="{{ url_for('choose') }}" class="btn btn-secondary">
+                    ✦ Create New
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">
+                    🏠 Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const questions = {{ questions | tojson }};
+        const quizId = {{ quiz_id }};
+        let current = 0;
+        let score = 0;
+        let answered = false;
+
+        function loadQuestion() {
+            if (current >= questions.length) {
+                showScore();
+                return;
+            }
+
+            answered = false;
+            const q = questions[current];
+            const total = questions.length;
+            const pct = (current / total) * 100;
+
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('q-counter').textContent =
+                'Question ' + (current + 1) + ' of ' + total;
+
+            const card = document.getElementById('quiz-card');
+            card.classList.remove('question-anim');
+            void card.offsetWidth;
+            card.classList.add('question-anim');
+
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('answer-hint').textContent = 'Choose an answer';
+
+            const feedback = document.getElementById('feedback-box');
+            feedback.className = 'feedback-box';
+            feedback.textContent = '';
+
+            const optsList = document.getElementById('options-list');
+            optsList.innerHTML = '';
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectAnswer(btn, opt, q.answer);
+                optsList.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(btn, selected, correct) {
+            if (answered) return;
+            answered = true;
+
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            const feedback = document.getElementById('feedback-box');
+
+            if (selected === correct) {
+                btn.classList.add('correct');
+                score++;
+                feedback.textContent = '✅ Correct! Well done!';
+                feedback.className = 'feedback-box correct';
+            } else {
+                btn.classList.add('wrong');
+                feedback.textContent = '❌ Wrong! The correct answer was: ' + correct;
+                feedback.className = 'feedback-box wrong';
+
+                allBtns.forEach(b => {
+                    if (b.textContent === correct) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+
+            document.getElementById('answer-hint').textContent = '';
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            current++;
+            loadQuestion();
+        }
+
+        function showScore() {
+            document.getElementById('quiz-section').style.display = 'none';
+            document.getElementById('score-section').classList.add('show');
+
+            const total = questions.length;
+            const pct = Math.round((score / total) * 100);
+            const wrong = total - score;
+
+            document.getElementById('score-display').textContent = score + '/' + total;
+            document.getElementById('correct-count').textContent = score;
+            document.getElementById('wrong-count').textContent = wrong;
+            document.getElementById('pct-display').textContent = pct + '%';
+
+            let emoji, title, message;
+
+            if (pct === 100) {
+                emoji = '🏆';
+                title = 'Perfect Score!';
+                message = 'Outstanding! You got every single question right!';
+            } else if (pct >= 80) {
+                emoji = '🎉';
+                title = 'Excellent Work!';
+                message = 'You really know this material well. Keep it up!';
+            } else if (pct >= 60) {
+                emoji = '👍';
+                title = 'Good Job!';
+                message = 'Solid effort! Review the ones you missed and try again.';
+            } else if (pct >= 40) {
+                emoji = '📚';
+                title = 'Keep Studying!';
+                message = 'You\'re getting there! A little more revision will help.';
+            } else {
+                emoji = '💪';
+                title = 'Don\'t Give Up!';
+                message = 'Everyone starts somewhere. Review the material and try again!';
+            }
+
+            document.getElementById('score-emoji').textContent = emoji;
+            document.getElementById('score-title').textContent = title;
+            document.getElementById('score-message').textContent = message;
+
+            fetch('/save_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    quiz_id: quizId,
+                    score: score + '/' + total
+                })
+            });
+        }
+
+        function restartQuiz() {
+            current = 0;
+            score = 0;
+            document.getElementById('score-section').classList.remove('show');
+            document.getElementById('quiz-section').style.display = 'flex';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — QuizForge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .anim {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-1 { animation-delay: 0.1s; }
+        .anim-2 { animation-delay: 0.25s; }
+        .anim-3 { animation-delay: 0.4s; }
+
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.12;
+            animation: drift linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.12; }
+            90% { opacity: 0.12; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+
+        .auth-card {
+            position: relative;
+            z-index: 1;
+        }
+
+        .show-pass {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 16px;
+            color: #aaa;
+            user-select: none;
+        }
+
+        .pass-wrap {
+            position: relative;
+        }
+
+        .pass-wrap input {
+            padding-right: 44px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 1.2rem 0;
+        }
+
+        .divider hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid #e0ddff;
+        }
+
+        .divider span {
+            font-size: 12px;
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="page-center" style="background: linear-gradient(135deg, #f0eeff 0%, #e1f5ee 100%); min-height:100vh;">
+        <div class="anim anim-1">
+            <div class="auth-card">
+
+                <div class="auth-logo anim anim-1">
+                    <a href="{{ url_for('index') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}"
+                             alt="QuizForge"
+                             style="width:60px; height:60px; border-radius:16px; margin-bottom:8px;">
+                    </a>
+                    <div class="logo-text">Quiz<span>Forge</span></div>
+                    <p>Welcome back! Let's keep learning.</p>
+                </div>
+
+                {% if error %}
+                <div class="error-msg anim anim-2">
+                    ⚠️ {{ error }}
+                </div>
+                {% endif %}
+
+                <div class="anim anim-2">
+                    <h2>Log in to your account</h2>
+
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email"
+                                   id="email"
+                                   name="email"
+                                   placeholder="you@example.com"
+                                   required
+                                   autocomplete="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="pass-wrap">
+                                <input type="password"
+                                       id="password"
+                                       name="password"
+                                       placeholder="Enter your password"
+                                       required
+                                       autocomplete="current-password">
+                                <span class="show-pass" onclick="togglePass()">👁️</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.5rem;">
+                            Log In ✦
+                        </button>
+                    </form>
+
+                    <div class="divider">
+                        <hr><span>or</span><hr>
+                    </div>
+
+                    <a href="{{ url_for('register') }}"
+                       class="btn btn-outline btn-full">
+                        Create a new account
+                    </a>
+                </div>
+
+                <div class="auth-footer anim anim-3">
+                    By logging in you agree to learn smarter with QuizForge 🚀
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePass() {
+            const input = document.getElementById('password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        const colors = ['#7f77dd', '#1d9e75', '#534ab7', '#5dcaa5'];
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 14; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            const size = Math.random() * 16 + 8;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.background = colors[Math.floor(Math.random() * colors.length)];
+            p.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            p.style.animationDelay = (Math.random() * 8) + 's';
+            container.appendChild(p);
+        }
+    </script>
+</body>
+</html>

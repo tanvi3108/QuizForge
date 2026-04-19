@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload — QuizForge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .anim {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-1 { animation-delay: 0.1s; }
+        .anim-2 { animation-delay: 0.3s; }
+        .anim-3 { animation-delay: 0.5s; }
+
+        .upload-zone.dragover {
+            border-color: #7f77dd;
+            background: #f0eeff;
+            transform: scale(1.02);
+        }
+
+        .upload-zone {
+            transition: all 0.2s;
+        }
+
+        .generating-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .gen-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.5s ease;
+        }
+
+        .gen-step.show {
+            opacity: 1;
+            transform: translateX(0);
+            color: white;
+        }
+
+        .gen-step .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        .gen-step.show .step-dot {
+            background: white;
+        }
+
+        .gen-step.done .step-dot {
+            background: #1d9e75;
+        }
+
+        .loading-overlay {
+            background: linear-gradient(135deg, rgba(127,119,221,0.97), rgba(29,158,117,0.97));
+        }
+
+        .loading-overlay p {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .loading-overlay .loading-sub {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body style="background: #f0eeff;">
+
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="logo">Quiz<span>Forge</span></a>
+        <div class="nav-links">
+            <a href="{{ url_for('history') }}">📋 History</a>
+            <a href="{{ url_for('logout') }}" style="color:#e24b4a;">Logout</a>
+        </div>
+    </nav>
+
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div style="text-align:center;">
+            <p>✨ Generating your
+                {% if mode == 'quiz' %}Quiz{% else %}Flashcards{% endif %}
+            </p>
+            <div class="loading-sub">This may take 15–30 seconds</div>
+        </div>
+        <div class="generating-steps">
+            <div class="gen-step" id="step1">
+                <div class="step-dot"></div>
+                Extracting text from your file...
+            </div>
+            <div class="gen-step" id="step2">
+                <div class="step-dot"></div>
+                Analysing study material...
+            </div>
+            <div class="gen-step" id="step3">
+                <div class="step-dot"></div>
+                {% if mode == 'quiz' %}
+                    Generating smart questions with AI...
+                {% else %}
+                    Creating flashcards with AI...
+                {% endif %}
+            </div>
+            <div class="gen-step" id="step4">
+                <div class="step-dot"></div>
+                Saving to your account...
+            </div>
+        </div>
+    </div>
+
+    <div class="upload-page">
+        <div class="upload-card anim anim-1">
+
+            <div style="text-align:center; margin-bottom:1.5rem;">
+                <div style="font-size:48px; margin-bottom:0.5rem;">
+                    {% if mode == 'quiz' %}📝{% else %}🃏{% endif %}
+                </div>
+                <h1>
+                    {% if mode == 'quiz' %}
+                        Generate a Quiz
+                    {% else %}
+                        Generate Flashcards
+                    {% endif %}
+                </h1>
+                <p class="upload-sub">
+                    Upload your study material and AI will
+                    {% if mode == 'quiz' %}
+                        create 15 smart MCQ questions
+                    {% else %}
+                        generate 15 beautiful flashcards
+                    {% endif %}
+                    from it
+                </p>
+            </div>
+
+            {% if error %}
+            <div class="error-msg">
+                ⚠️ {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST"
+                  action="{{ url_for('process') }}"
+                  enctype="multipart/form-data"
+                  id="upload-form"
+                  onsubmit="showLoading()">
+
+                <input type="hidden" name="mode" value="{{ mode }}">
+
+                <div class="upload-zone anim anim-2"
+                     id="upload-zone"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+
+                    <input type="file"
+                           name="file"
+                           id="file-input"
+                           accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx"
+                           onchange="showFileName(this)">
+
+                    <div class="upload-icon">📂</div>
+                    <div style="font-size:15px; font-weight:600; color:#2c2c2c;">
+                        Click to upload or drag & drop
+                    </div>
+                    <p>Your study material goes here</p>
+                </div>
+
+                <div class="selected-file" id="selected-file">
+                    📄 <span id="file-name"></span>
+                </div>
+
+                <div class="file-tags anim anim-2">
+                    <span class="file-tag">PDF</span>
+                    <span class="file-tag">PNG</span>
+                    <span class="file-tag">JPG</span>
+                    <span class="file-tag">DOCX</span>
+                    <span class="file-tag">PPTX</span>
+                </div>
+
+                <div class="anim anim-3">
+                    <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;">
+                        {% if mode == 'quiz' %}
+                            ✦ Generate Quiz
+                        {% else %}
+                            ✦ Generate Flashcards
+                        {% endif %}
+                    </button>
+
+                    <a href="{{ url_for('choose') }}"
+                       class="btn btn-outline btn-full"
+                       style="margin-top:10px; display:block; text-align:center;">
+                        ← Go Back
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        function showFileName(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('file-name').textContent = input.files[0].name;
+                document.getElementById('selected-file').style.display = 'block';
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('upload-zone').classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('upload-zone').classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('upload-zone').classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('file-input').files = files;
+                document.getElementById('file-name').textContent = files[0].name;
+                document.getElementById('selected-file').style.display = 'block';
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            steps.forEach((id, i) => {
+                setTimeout(() => {
+                    const el = document.getElementById(id);
+                    el.classList.add('show');
+                    if (i > 0) {
+                        document.getElementById(steps[i-1]).classList.add('done');
+                    }
+                }, i * 4000);
+            });
+        }
+    </script>
+
+</body>
+</html>

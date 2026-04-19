@@ -1,0 +1,10 @@
+flask
+flask-session
+werkzeug
+python-dotenv
+google-generativeai
+pdfplumber
+python-docx
+python-pptx
+pytesseract
+Pillow

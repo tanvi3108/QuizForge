@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History — QuizForge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .anim {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-1 { animation-delay: 0.1s; }
+        .anim-2 { animation-delay: 0.25s; }
+        .anim-3 { animation-delay: 0.4s; }
+
+        .history-header {
+            margin-bottom: 2rem;
+        }
+
+        .history-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c2c2c;
+            margin-bottom: 4px;
+        }
+
+        .history-header p {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(127,119,221,0.07);
+        }
+
+        .history-table thead {
+            background: #f0eeff;
+        }
+
+        .history-table thead th {
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #7f77dd;
+            border-bottom: 1px solid #e0ddff;
+        }
+
+        .history-table tbody tr {
+            border-bottom: 1px solid #f5f4ff;
+            transition: background 0.2s;
+        }
+
+        .history-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .history-table tbody tr:hover {
+            background: #fafafe;
+        }
+
+        .history-table tbody td {
+            padding: 14px 20px;
+            font-size: 14px;
+            color: #2c2c2c;
+            vertical-align: middle;
+        }
+
+        .history-table .title-cell {
+            font-weight: 500;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-table .date-cell {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .score-pill {
+            display: inline-block;
+            background: #f0eeff;
+            color: #7f77dd;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 50px;
+        }
+
+        .no-score {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .action-btn.open {
+            background: #7f77dd;
+            color: white;
+        }
+
+        .action-btn.open:hover {
+            background: #6b63cc;
+        }
+
+        .action-btn.open.green {
+            background: #1d9e75;
+        }
+
+        .action-btn.open.green:hover {
+            background: #178a64;
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 50px;
+        }
+
+        .type-badge.quiz {
+            background: #f0eeff;
+            color: #7f77dd;
+        }
+
+        .type-badge.flash {
+            background: #e1f5ee;
+            color: #0f6e56;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #ccc;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 52px;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            color: #bbb;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body style="background: #f0eeff;">
+
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="logo">Quiz<span>Forge</span></a>
+        <div class="nav-links">
+            <a href="{{ url_for('choose') }}" class="btn-nav">+ New</a>
+            <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+            <a href="{{ url_for('logout') }}" style="color:#e24b4a;">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="history-header anim anim-1">
+            <h1>📋 Your History</h1>
+            <p>All your quizzes and flashcard sets in one place</p>
+        </div>
+
+        <div class="anim anim-2">
+            <div class="history-tabs">
+                <button class="tab-btn active" onclick="switchTab('quizzes', this)">
+                    📝 Quizzes ({{ quizzes|length }})
+                </button>
+                <button class="tab-btn" onclick="switchTab('flashcards', this)">
+                    🃏 Flashcards ({{ flashcards|length }})
+                </button>
+            </div>
+        </div>
+
+        <!-- QUIZZES TAB -->
+        <div class="tab-content active anim anim-3" id="tab-quizzes">
+            {% if quizzes %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Questions</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in quizzes %}
+                    <tr>
+                        <td class="title-cell">
+                            <span class="type-badge quiz">📝 Quiz</span>
+                            <br>
+                            <span style="margin-top:4px; display:block;">{{ q.title }}</span>
+                        </td>
+                        <td>{{ q.count }} Qs</td>
+                        <td>
+                            {% if q.score %}
+                            <span class="score-pill">{{ q.score }}</span>
+                            {% else %}
+                            <span class="no-score">Not attempted</span>
+                            {% endif %}
+                        </td>
+                        <td class="date-cell">{{ q.created_at[:10] }}</td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="{{ url_for('quiz', quiz_id=q.id) }}"
+                                   class="action-btn open">
+                                   Open →
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <p>No quizzes created yet!</p>
+                <a href="{{ url_for('upload', mode='quiz') }}" class="btn btn-primary">
+                    Create your first Quiz
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FLASHCARDS TAB -->
+        <div class="tab-content anim anim-3" id="tab-flashcards">
+            {% if flashcards %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Cards</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in flashcards %}
+                    <tr>
+                        <td class="title-cell">
+                            <span class="type-badge flash">🃏 Flashcards</span>
+                            <br>
+                            <span style="margin-top:4px; display:block;">{{ f.title }}</span>
+                        </td>
+                        <td>{{ f.count }} Cards</td>
+                        <td class="date-cell">{{ f.created_at[:10] }}</td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="{{ url_for('flashcard', fc_id=f.id) }}"
+                                   class="action-btn open green">
+                                   Open →
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <p>No flashcard sets created yet!</p>
+                <a href="{{ url_for('upload', mode='flash') }}" class="btn btn-secondary">
+                    Create your first Flashcard Set
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
